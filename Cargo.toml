@@ -18,6 +18,8 @@ rayon = "1.1"
 serde = { version = "1.0", features = ["derive"] }
 
 [dependencies.curv-kzen]
+git = "https://github.com/DenisTok/curv"
+branch = "no_rnd"
 version = "0.9.0"
 default-features = false
 features = ["num-bigint"]
