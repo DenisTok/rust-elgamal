@@ -260,10 +260,27 @@ impl ExponentElGamal {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ElGamal;
     use crate::ElGamalKeyPair;
     use crate::ElGamalPP;
-    use crate::{BigIntRand, ElGamal};
+    use curv::arithmetic::traits::Samplable;
     use curv::BigInt;
+
+    pub struct BigIntRand {}
+
+    impl Rand for BigIntRand {
+        fn sample_below(&self, upper: &BigInt) -> BigInt {
+            BigInt::sample_below(upper)
+        }
+
+        fn sample_range(&self, lower: &BigInt, upper: &BigInt) -> BigInt {
+            BigInt::sample_range(lower, upper)
+        }
+
+        fn sample(&self, bit_size: usize) -> BigInt {
+            BigInt::sample(bit_size)
+        }
+    }
 
     #[test]
     #[ignore]

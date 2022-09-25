@@ -3,9 +3,26 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 #[allow(dead_code)]
 mod elgamal_benches {
     use super::*;
+    use curv::arithmetic::traits::Samplable;
     use curv::BigInt;
     use elgamal::rfc7919_groups::SupportedGroups;
-    use elgamal::{BigIntRand, ElGamal, ElGamalCiphertext, ElGamalKeyPair, ElGamalPP};
+    use elgamal::{ElGamal, ElGamalCiphertext, ElGamalKeyPair, ElGamalPP, Rand};
+
+    pub struct BigIntRand {}
+
+    impl Rand for BigIntRand {
+        fn sample_below(&self, upper: &BigInt) -> BigInt {
+            BigInt::sample_below(upper)
+        }
+
+        fn sample_range(&self, lower: &BigInt, upper: &BigInt) -> BigInt {
+            BigInt::sample_range(lower, upper)
+        }
+
+        fn sample(&self, bit_size: usize) -> BigInt {
+            BigInt::sample(bit_size)
+        }
+    }
 
     struct EGPMulInput {
         ct: (ElGamalCiphertext, ElGamalCiphertext),

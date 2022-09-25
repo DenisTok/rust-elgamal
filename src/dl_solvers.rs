@@ -78,9 +78,25 @@ impl<'a> SimplePollard<'a> {
 mod tests {
     use super::*;
     use crate::{
-        rfc7919_groups::SupportedGroups, BigIntRand, ElGamalKeyPair, ElGamalPP, ExponentElGamal,
+        rfc7919_groups::SupportedGroups, ElGamalKeyPair, ElGamalPP, ExponentElGamal, Rand,
     };
     use curv::arithmetic::traits::Samplable;
+
+    pub struct BigIntRand {}
+
+    impl Rand for BigIntRand {
+        fn sample_below(&self, upper: &BigInt) -> BigInt {
+            BigInt::sample_below(upper)
+        }
+
+        fn sample_range(&self, lower: &BigInt, upper: &BigInt) -> BigInt {
+            BigInt::sample_range(lower, upper)
+        }
+
+        fn sample(&self, bit_size: usize) -> BigInt {
+            BigInt::sample(bit_size)
+        }
+    }
 
     #[test]
     fn test_simple_pollard_wiki_example() {
