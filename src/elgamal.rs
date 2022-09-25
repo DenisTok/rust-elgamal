@@ -256,113 +256,113 @@ impl ExponentElGamal {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::ElGamal;
-    use crate::ElGamalKeyPair;
-    use crate::ElGamalPP;
-    use curv::arithmetic::traits::Samplable;
-    use curv::BigInt;
-
-    pub struct BigIntRand {}
-
-    impl Rand for BigIntRand {
-        fn sample_below(&self, upper: &BigInt) -> BigInt {
-            BigInt::sample_below(upper)
-        }
-
-        fn sample_range(&self, lower: &BigInt, upper: &BigInt) -> BigInt {
-            BigInt::sample_range(lower, upper)
-        }
-
-        fn sample(&self, bit_size: usize) -> BigInt {
-            BigInt::sample(bit_size)
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn test_elgamal_safe() {
-        let bit_size = 2048;
-        let rnd = BigIntRand {};
-        let pp = ElGamalPP::generate_safe(bit_size, &rnd);
-        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
-        let message = BigInt::from(13);
-        let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
-        let message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
-        assert_eq!(message, message_tag);
-    }
-
-    #[test]
-    fn test_elgamal_rfc7919() {
-        let group_id = SupportedGroups::FFDHE2048;
-        let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let rnd = BigIntRand {};
-        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
-        let message = BigInt::from(13);
-        let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
-        let message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
-        assert_eq!(message, message_tag);
-    }
-
-    #[test]
-    fn test_mul() {
-        let group_id = SupportedGroups::FFDHE2048;
-        let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let rnd = BigIntRand {};
-        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
-        let message1 = BigInt::from(13);
-        let c1 = ElGamal::encrypt(&message1, &keypair.pk, &rnd).unwrap();
-        let message2 = BigInt::from(9);
-        let c2 = ElGamal::encrypt(&message2, &keypair.pk, &rnd).unwrap();
-        let c = ElGamal::mul(&c1, &c2).unwrap();
-        let message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
-        assert_eq!(BigInt::from(117), message_tag);
-    }
-
-    #[test]
-    fn test_pow() {
-        let group_id = SupportedGroups::FFDHE2048;
-        let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let rnd = BigIntRand {};
-        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
-        let message = BigInt::from(13);
-        let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
-        let constant = BigInt::from(3);
-        let c_tag = ElGamal::pow(&c, &constant);
-        let message_tag = ElGamal::decrypt(&c_tag, &keypair.sk).unwrap();
-        assert_eq!(BigInt::from(2197), message_tag);
-    }
-
-    #[test]
-    fn test_exponent_elgamal_homomorphic_add() {
-        let group_id = SupportedGroups::FFDHE2048;
-        let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let rnd = BigIntRand {};
-        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
-        let message1 = rnd.sample_below(&pp.q);
-        let random1 = rnd.sample_below(&pp.q);
-        let c1 =
-            ExponentElGamal::encrypt_from_predefined_randomness(&message1, &keypair.pk, &random1)
-                .unwrap();
-        let message2 = rnd.sample_below(&pp.q);
-        let random2 = rnd.sample_below(&pp.q);
-        let c2 =
-            ExponentElGamal::encrypt_from_predefined_randomness(&message2, &keypair.pk, &random2)
-                .unwrap();
-        let c = ExponentElGamal::add(&c1, &c2).unwrap();
-        let message_total = (&message1 + &message2).modulus(&pp.q);
-        let random_total = (&random1 + &random2).modulus(&pp.q);
-
-        let c_star = ExponentElGamal::encrypt_from_predefined_randomness(
-            &message_total,
-            &keypair.pk,
-            &random_total,
-        )
-        .unwrap();
-
-        assert_eq!(c_star, c);
-    }
-}
+//
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::ElGamal;
+//     use crate::ElGamalKeyPair;
+//     use crate::ElGamalPP;
+//     use curv::arithmetic::traits::Samplable;
+//     use curv::BigInt;
+//
+//     pub struct BigIntRand {}
+//
+//     impl Rand for BigIntRand {
+//         fn sample_below(&self, upper: &BigInt) -> BigInt {
+//             BigInt::sample_below(upper)
+//         }
+//
+//         fn sample_range(&self, lower: &BigInt, upper: &BigInt) -> BigInt {
+//             BigInt::sample_range(lower, upper)
+//         }
+//
+//         fn sample(&self, bit_size: usize) -> BigInt {
+//             BigInt::sample(bit_size)
+//         }
+//     }
+//
+//     #[test]
+//     #[ignore]
+//     fn test_elgamal_safe() {
+//         let bit_size = 2048;
+//         let rnd = BigIntRand {};
+//         let pp = ElGamalPP::generate_safe(bit_size, &rnd);
+//         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
+//         let message = BigInt::from(13);
+//         let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
+//         let message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
+//         assert_eq!(message, message_tag);
+//     }
+//
+//     #[test]
+//     fn test_elgamal_rfc7919() {
+//         let group_id = SupportedGroups::FFDHE2048;
+//         let pp = ElGamalPP::generate_from_rfc7919(group_id);
+//         let rnd = BigIntRand {};
+//         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
+//         let message = BigInt::from(13);
+//         let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
+//         let message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
+//         assert_eq!(message, message_tag);
+//     }
+//
+//     #[test]
+//     fn test_mul() {
+//         let group_id = SupportedGroups::FFDHE2048;
+//         let pp = ElGamalPP::generate_from_rfc7919(group_id);
+//         let rnd = BigIntRand {};
+//         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
+//         let message1 = BigInt::from(13);
+//         let c1 = ElGamal::encrypt(&message1, &keypair.pk, &rnd).unwrap();
+//         let message2 = BigInt::from(9);
+//         let c2 = ElGamal::encrypt(&message2, &keypair.pk, &rnd).unwrap();
+//         let c = ElGamal::mul(&c1, &c2).unwrap();
+//         let message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
+//         assert_eq!(BigInt::from(117), message_tag);
+//     }
+//
+//     #[test]
+//     fn test_pow() {
+//         let group_id = SupportedGroups::FFDHE2048;
+//         let pp = ElGamalPP::generate_from_rfc7919(group_id);
+//         let rnd = BigIntRand {};
+//         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
+//         let message = BigInt::from(13);
+//         let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
+//         let constant = BigInt::from(3);
+//         let c_tag = ElGamal::pow(&c, &constant);
+//         let message_tag = ElGamal::decrypt(&c_tag, &keypair.sk).unwrap();
+//         assert_eq!(BigInt::from(2197), message_tag);
+//     }
+//
+//     #[test]
+//     fn test_exponent_elgamal_homomorphic_add() {
+//         let group_id = SupportedGroups::FFDHE2048;
+//         let pp = ElGamalPP::generate_from_rfc7919(group_id);
+//         let rnd = BigIntRand {};
+//         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
+//         let message1 = rnd.sample_below(&pp.q);
+//         let random1 = rnd.sample_below(&pp.q);
+//         let c1 =
+//             ExponentElGamal::encrypt_from_predefined_randomness(&message1, &keypair.pk, &random1)
+//                 .unwrap();
+//         let message2 = rnd.sample_below(&pp.q);
+//         let random2 = rnd.sample_below(&pp.q);
+//         let c2 =
+//             ExponentElGamal::encrypt_from_predefined_randomness(&message2, &keypair.pk, &random2)
+//                 .unwrap();
+//         let c = ExponentElGamal::add(&c1, &c2).unwrap();
+//         let message_total = (&message1 + &message2).modulus(&pp.q);
+//         let random_total = (&random1 + &random2).modulus(&pp.q);
+//
+//         let c_star = ExponentElGamal::encrypt_from_predefined_randomness(
+//             &message_total,
+//             &keypair.pk,
+//             &random_total,
+//         )
+//         .unwrap();
+//
+//         assert_eq!(c_star, c);
+//     }
+// }
