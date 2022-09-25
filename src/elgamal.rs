@@ -1,5 +1,4 @@
 use crate::prime::is_prime;
-use crate::{ElGamal, Rand};
 use crate::ElGamalCiphertext;
 use crate::ElGamalError;
 use crate::ElGamalKeyPair;
@@ -7,6 +6,7 @@ use crate::ElGamalPP;
 use crate::ElGamalPrivateKey;
 use crate::ElGamalPublicKey;
 use crate::ExponentElGamal;
+use crate::{ElGamal, Rand};
 
 use crate::rfc7919_groups::{SupportedGroups, SRG};
 
@@ -45,7 +45,11 @@ impl ElGamalPP {
         }
     }
 
-    pub fn generate_from_predefined_randomness<R: Rand>(g: BigInt, q: BigInt, rnd: &R) -> Result<Self, ElGamalError> {
+    pub fn generate_from_predefined_randomness<R: Rand>(
+        g: BigInt,
+        q: BigInt,
+        rnd: &R,
+    ) -> Result<Self, ElGamalError> {
         let p = BigInt::from(2) * &q + BigInt::one();
         //test 0<m<p
         if g.ge(&p) || g.le(&BigInt::zero()) {
@@ -81,7 +85,11 @@ impl ElGamalPublicKey {
 }
 
 impl ElGamal {
-    pub fn encrypt<R: Rand>(m: &BigInt, pk: &ElGamalPublicKey, rnd: &R) -> Result<ElGamalCiphertext, ElGamalError> {
+    pub fn encrypt<R: Rand>(
+        m: &BigInt,
+        pk: &ElGamalPublicKey,
+        rnd: &R,
+    ) -> Result<ElGamalCiphertext, ElGamalError> {
         //test 0<m<p
         if m.ge(&pk.pp.q) || m.le(&BigInt::zero()) {
             return Err(ElGamalError::EncryptionError);
@@ -155,7 +163,11 @@ impl ElGamal {
 }
 
 impl ExponentElGamal {
-    pub fn encrypt<R: Rand>(m: &BigInt, pk: &ElGamalPublicKey, rnd: &R) -> Result<ElGamalCiphertext, ElGamalError> {
+    pub fn encrypt<R: Rand>(
+        m: &BigInt,
+        pk: &ElGamalPublicKey,
+        rnd: &R,
+    ) -> Result<ElGamalCiphertext, ElGamalError> {
         // test 0<m<p
         // If decryption is required, a tighter bound is needed, i.e m < 2^32
         if m.ge(&pk.pp.q) || m.lt(&BigInt::zero()) {
@@ -248,9 +260,9 @@ impl ExponentElGamal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{BigIntRand, ElGamal};
     use crate::ElGamalKeyPair;
     use crate::ElGamalPP;
+    use crate::{BigIntRand, ElGamal};
     use curv::BigInt;
 
     #[test]
@@ -258,10 +270,10 @@ mod tests {
     fn test_elgamal_safe() {
         let bit_size = 2048;
         let rnd = BigIntRand {};
-        let pp = ElGamalPP::generate_safe(bit_size,  &rnd);
+        let pp = ElGamalPP::generate_safe(bit_size, &rnd);
         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
         let message = BigInt::from(13);
-        let c = ElGamal::encrypt(&message, &keypair.pk,  &rnd).unwrap();
+        let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
         let message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
         assert_eq!(message, message_tag);
     }
@@ -313,7 +325,7 @@ mod tests {
         let pp = ElGamalPP::generate_from_rfc7919(group_id);
         let rnd = BigIntRand {};
         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
-        let message1 =rnd.sample_below(&pp.q);
+        let message1 = rnd.sample_below(&pp.q);
         let random1 = rnd.sample_below(&pp.q);
         let c1 =
             ExponentElGamal::encrypt_from_predefined_randomness(&message1, &keypair.pk, &random1)

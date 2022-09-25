@@ -16,7 +16,10 @@ use crate::Rand;
 
 pub fn is_safe_prime<R: Rand>(candidate: &BigInt, rnd: &R) -> bool {
     if is_prime(candidate, rnd) {
-        return is_prime(&(candidate - BigInt::one()).div_floor(&BigInt::from(2)), rnd);
+        return is_prime(
+            &(candidate - BigInt::one()).div_floor(&BigInt::from(2)),
+            rnd,
+        );
     }
     return false;
 }

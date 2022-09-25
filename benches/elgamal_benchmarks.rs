@@ -5,8 +5,7 @@ mod elgamal_benches {
     use super::*;
     use curv::BigInt;
     use elgamal::rfc7919_groups::SupportedGroups;
-    use elgamal::{ElGamal, ElGamalKeyPair, ElGamalPP,ElGamalCiphertext, BigIntRand};
-
+    use elgamal::{BigIntRand, ElGamal, ElGamalCiphertext, ElGamalKeyPair, ElGamalPP};
 
     struct EGPMulInput {
         ct: (ElGamalCiphertext, ElGamalCiphertext),
@@ -25,8 +24,14 @@ mod elgamal_benches {
         SupportedGroups::FFDHE8192,
     ];
     static BIT_PARAMS: [usize; 2] = [1024, 2048];
-    static MSG_TUPLES: [(u32,u32); 6] = [(9,3), (90,30), (900,300), (9000, 3000), (90000, 30000), (900000, 300000)];
-
+    static MSG_TUPLES: [(u32, u32); 6] = [
+        (9, 3),
+        (90, 30),
+        (900, 300),
+        (9000, 3000),
+        (90000, 30000),
+        (900000, 300000),
+    ];
 
     fn keypair_from_rfc7919(group_id: SupportedGroups) -> ElGamalKeyPair {
         let p_point = ElGamalPP::generate_from_rfc7919(group_id);
@@ -43,7 +48,7 @@ mod elgamal_benches {
         ElGamal::pow(&data.ct, &data.constant);
     }
 
-    fn elgamal_multiply(group_id: SupportedGroups, msg_params: &(u32,u32)) {
+    fn elgamal_multiply(group_id: SupportedGroups, msg_params: &(u32, u32)) {
         // let pp = ElGamalPP::generate(bit_size);
         let pp = ElGamalPP::generate_from_rfc7919(group_id);
         let rnd = BigIntRand {};
@@ -56,7 +61,7 @@ mod elgamal_benches {
         let _message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
     }
 
-    fn elgamal_power(group_id: SupportedGroups, msg_params: &(u32,u32)) {
+    fn elgamal_power(group_id: SupportedGroups, msg_params: &(u32, u32)) {
         let pp = ElGamalPP::generate_from_rfc7919(group_id);
         let rnd = BigIntRand {};
         let keypair = ElGamalKeyPair::generate(&pp, &rnd);
@@ -96,8 +101,8 @@ mod elgamal_benches {
 
     fn multiply(c: &mut Criterion) {
         let mut group = c.benchmark_group("multiply");
-        for group_id in RFC_GROUPS.iter()  {
-            for msg in MSG_TUPLES.iter() { 
+        for group_id in RFC_GROUPS.iter() {
+            for msg in MSG_TUPLES.iter() {
                 let bench_id = format!("group_id: {}, msg: {:?}", group_id, msg);
                 group.bench_with_input(
                     BenchmarkId::from_parameter(bench_id),
@@ -132,27 +137,26 @@ mod elgamal_benches {
         let mut group = c.benchmark_group("elgamal_pow");
         // static BIT_SIZES: [usize; 2] = [1024, 2048];
 
-        let mut pow_data:Vec<(EGPowInput, SupportedGroups, (u32,u32))> = Vec::new();
+        let mut pow_data: Vec<(EGPowInput, SupportedGroups, (u32, u32))> = Vec::new();
 
-        for group_id in RFC_GROUPS.iter() {    
+        for group_id in RFC_GROUPS.iter() {
             let pp = ElGamalPP::generate_from_rfc7919(*group_id);
             for msg in MSG_TUPLES.iter() {
-                let ct = ElGamalCiphertext {c1: BigInt::from(msg.0), c2: BigInt::from(msg.1), pp: pp.clone()};
+                let ct = ElGamalCiphertext {
+                    c1: BigInt::from(msg.0),
+                    c2: BigInt::from(msg.1),
+                    pp: pp.clone(),
+                };
                 let constant = BigInt::from(msg.0);
-                pow_data.push((EGPowInput {ct, constant}, *group_id, *msg));
+                pow_data.push((EGPowInput { ct, constant }, *group_id, *msg));
             }
         }
 
-
         for data in pow_data.iter() {
             let bench_id = format!("group_id: {}, msg: {:?}", data.1, data.2);
-            group.bench_with_input(
-                BenchmarkId::from_parameter(bench_id),
-                data,
-                |b, data| {
-                    b.iter(|| elgamal_pow(&data.0));
-                },
-            );
+            group.bench_with_input(BenchmarkId::from_parameter(bench_id), data, |b, data| {
+                b.iter(|| elgamal_pow(&data.0));
+            });
         }
         group.finish();
     }
@@ -161,30 +165,37 @@ mod elgamal_benches {
         let mut group = c.benchmark_group("elgamal_mul");
         // static BIT_SIZES: [usize; 2] = [1024, 2048];
 
-        let mut cipher_texts: Vec<(EGPMulInput, SupportedGroups,  (u32, u32))> = Vec::new();
-        
-        for group_id in RFC_GROUPS.iter() {    
+        let mut cipher_texts: Vec<(EGPMulInput, SupportedGroups, (u32, u32))> = Vec::new();
+
+        for group_id in RFC_GROUPS.iter() {
             let pp = ElGamalPP::generate_from_rfc7919(*group_id);
             for msg in MSG_TUPLES.iter() {
-                let c1 = ElGamalCiphertext {c1: BigInt::from(msg.0), c2: BigInt::from(msg.1), pp: pp.clone()};
-                let c2 = ElGamalCiphertext {c1: BigInt::from(msg.1), c2: BigInt::from(msg.0), pp: pp.clone()};
-                cipher_texts.push((EGPMulInput {ct: (c1, c2)}, *group_id, *msg));
+                let c1 = ElGamalCiphertext {
+                    c1: BigInt::from(msg.0),
+                    c2: BigInt::from(msg.1),
+                    pp: pp.clone(),
+                };
+                let c2 = ElGamalCiphertext {
+                    c1: BigInt::from(msg.1),
+                    c2: BigInt::from(msg.0),
+                    pp: pp.clone(),
+                };
+                cipher_texts.push((EGPMulInput { ct: (c1, c2) }, *group_id, *msg));
             }
         }
-        
-        for cipher_tuple in cipher_texts.iter() {  
-            let bench_id= format!("group_id: {}, msg: {:?}", cipher_tuple.1, cipher_tuple.2);
-                group.bench_with_input( 
-                    BenchmarkId::from_parameter(bench_id),
-                    // BenchmarkId::new("cipher_texts", cipher_tuple)
-                    &cipher_tuple,
-                    |b, &cipher_tuple| {
-                        b.iter(|| elgamal_mul(&cipher_tuple.0));
-                    },
-                );
-            }
-        group.finish();
 
+        for cipher_tuple in cipher_texts.iter() {
+            let bench_id = format!("group_id: {}, msg: {:?}", cipher_tuple.1, cipher_tuple.2);
+            group.bench_with_input(
+                BenchmarkId::from_parameter(bench_id),
+                // BenchmarkId::new("cipher_texts", cipher_tuple)
+                &cipher_tuple,
+                |b, &cipher_tuple| {
+                    b.iter(|| elgamal_mul(&cipher_tuple.0));
+                },
+            );
+        }
+        group.finish();
     }
 
     criterion_group! {

@@ -77,7 +77,9 @@ impl<'a> SimplePollard<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{rfc7919_groups::SupportedGroups, ElGamalKeyPair, ElGamalPP, ExponentElGamal, BigIntRand};
+    use crate::{
+        rfc7919_groups::SupportedGroups, BigIntRand, ElGamalKeyPair, ElGamalPP, ExponentElGamal,
+    };
     use curv::arithmetic::traits::Samplable;
 
     #[test]

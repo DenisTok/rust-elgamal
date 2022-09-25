@@ -1,4 +1,3 @@
-use curv::arithmetic::BasicOps;
 use serde::{Deserialize, Serialize};
 
 pub mod dl_solvers;
@@ -57,9 +56,7 @@ pub trait Rand {
     ///
     /// ## Panics
     /// Panics if `upper <= 0`
-    fn sample_below(&self, upper: &BigInt) -> BigInt{
-        return upper.sub(&BigInt::from(-1))
-    }
+    fn sample_below(&self, upper: &BigInt) -> BigInt;
     /// Generates random number within `[lower; upper)` range
     ///
     /// ## Panics
