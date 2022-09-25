@@ -1,3 +1,4 @@
+use curv::arithmetic::BasicOps;
 use serde::{Deserialize, Serialize};
 
 pub mod dl_solvers;
@@ -48,4 +49,40 @@ pub enum ElGamalError {
     DecryptionError,
     HomomorphicError,
     ParamError,
+}
+
+/// Generating random BigInt
+pub trait Rand {
+    /// Generates random number within `[0; upper)` range
+    ///
+    /// ## Panics
+    /// Panics if `upper <= 0`
+    fn sample_below(&self, upper: &BigInt) -> BigInt{
+        return upper.sub(&BigInt::from(-1))
+    }
+    /// Generates random number within `[lower; upper)` range
+    ///
+    /// ## Panics
+    /// Panics if `upper <= lower`
+    fn sample_range(&self, lower: &BigInt, upper: &BigInt) -> BigInt;
+    /// Generates number within `[0; 2^bit_size)` range
+    fn sample(&self, bit_size: usize) -> BigInt;
+}
+
+use curv::arithmetic::traits::Samplable;
+
+pub struct BigIntRand {}
+
+impl Rand for BigIntRand {
+    fn sample_below(&self, upper: &BigInt) -> BigInt {
+        BigInt::sample_below(upper)
+    }
+
+    fn sample_range(&self, lower: &BigInt, upper: &BigInt) -> BigInt {
+        BigInt::sample_range(lower, upper)
+    }
+
+    fn sample(&self, bit_size: usize) -> BigInt {
+        BigInt::sample(bit_size)
+    }
 }

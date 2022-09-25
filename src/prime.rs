@@ -1,10 +1,11 @@
 use curv::arithmetic::traits::Modulo;
-use curv::arithmetic::traits::Samplable;
 use curv::arithmetic::BitManipulation;
 use curv::arithmetic::Integer;
 use curv::arithmetic::One;
 use curv::arithmetic::Zero;
 use curv::BigInt;
+
+use crate::Rand;
 
 // Runs the following three tests on a given `candidate` to determine
 // primality:
@@ -13,13 +14,13 @@ use curv::BigInt;
 // 2. Run Fermat's Little Theorem against the candidate.
 // 3. Run five rounds of the Miller-Rabin test on the candidate.
 
-pub fn is_safe_prime(candidate: &BigInt) -> bool {
-    if is_prime(candidate) {
-        return is_prime(&(candidate - BigInt::one()).div_floor(&BigInt::from(2)));
+pub fn is_safe_prime<R: Rand>(candidate: &BigInt, rnd: &R) -> bool {
+    if is_prime(candidate, rnd) {
+        return is_prime(&(candidate - BigInt::one()).div_floor(&BigInt::from(2)), rnd);
     }
     return false;
 }
-pub fn is_prime(candidate: &BigInt) -> bool {
+pub fn is_prime<R: Rand>(candidate: &BigInt, rnd: &R) -> bool {
     // First, simple trial divide
     for p in SMALL_PRIMES.iter() {
         let prime = BigInt::from(*p);
@@ -31,7 +32,7 @@ pub fn is_prime(candidate: &BigInt) -> bool {
         }
     }
     // Second, do a little Fermat test on the candidate
-    if !fermat(candidate) {
+    if !fermat(candidate, rnd) {
         return false;
     }
 
@@ -42,7 +43,7 @@ pub fn is_prime(candidate: &BigInt) -> bool {
         150..=300 => 15,
         _ => 5,
     };
-    if !miller_rabin(candidate, limit) {
+    if !miller_rabin(candidate, limit, rnd) {
         return false;
     }
     true
@@ -50,15 +51,15 @@ pub fn is_prime(candidate: &BigInt) -> bool {
 
 /// Perform test based on Fermat's little theorem
 /// This might be performed more than once, see Handbook of Applied Cryptography [Algorithm 4.9 p136]
-fn fermat(candidate: &BigInt) -> bool {
-    let random = BigInt::sample_below(candidate);
+fn fermat<R: Rand>(candidate: &BigInt, rnd: &R) -> bool {
+    let random = rnd.sample_below(candidate);
     let result = BigInt::mod_pow(&random, &(candidate - &BigInt::one()), candidate);
 
     result == BigInt::one()
 }
 
 /// Perform Miller-Rabin primality test
-fn miller_rabin(candidate: &BigInt, limit: usize) -> bool {
+fn miller_rabin<R: Rand>(candidate: &BigInt, limit: usize, rnd: &R) -> bool {
     // Iterations recommended for which  p < (1/2)^{80}
     //  500 bits => 6 iterations
     // 1000 bits => 3 iterations
@@ -69,7 +70,7 @@ fn miller_rabin(candidate: &BigInt, limit: usize) -> bool {
     let two = &one + &one;
 
     for _ in 0..limit {
-        let basis = BigInt::sample_range(&two, &(candidate - &two));
+        let basis = rnd.sample_range(&two, &(candidate - &two));
         let mut y = BigInt::mod_pow(&basis, &d, candidate);
 
         if y == one || y == (candidate - &one) {

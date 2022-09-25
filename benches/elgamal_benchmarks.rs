@@ -5,7 +5,7 @@ mod elgamal_benches {
     use super::*;
     use curv::BigInt;
     use elgamal::rfc7919_groups::SupportedGroups;
-    use elgamal::{ElGamal, ElGamalKeyPair, ElGamalPP,ElGamalCiphertext};
+    use elgamal::{ElGamal, ElGamalKeyPair, ElGamalPP,ElGamalCiphertext, BigIntRand};
 
 
     struct EGPMulInput {
@@ -30,7 +30,8 @@ mod elgamal_benches {
 
     fn keypair_from_rfc7919(group_id: SupportedGroups) -> ElGamalKeyPair {
         let p_point = ElGamalPP::generate_from_rfc7919(group_id);
-        let keypair = ElGamalKeyPair::generate(&p_point);
+        let rnd = BigIntRand {};
+        let keypair = ElGamalKeyPair::generate(&p_point, &rnd);
         keypair
     }
 
@@ -45,20 +46,22 @@ mod elgamal_benches {
     fn elgamal_multiply(group_id: SupportedGroups, msg_params: &(u32,u32)) {
         // let pp = ElGamalPP::generate(bit_size);
         let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let keypair = ElGamalKeyPair::generate(&pp);
+        let rnd = BigIntRand {};
+        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
         let message1 = BigInt::from(msg_params.0);
-        let c1 = ElGamal::encrypt(&message1, &keypair.pk).unwrap();
+        let c1 = ElGamal::encrypt(&message1, &keypair.pk, &rnd).unwrap();
         let message2 = BigInt::from(msg_params.1);
-        let c2 = ElGamal::encrypt(&message2, &keypair.pk).unwrap();
+        let c2 = ElGamal::encrypt(&message2, &keypair.pk, &rnd).unwrap();
         let c = ElGamal::mul(&c1, &c2).unwrap();
         let _message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
     }
 
     fn elgamal_power(group_id: SupportedGroups, msg_params: &(u32,u32)) {
         let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let keypair = ElGamalKeyPair::generate(&pp);
+        let rnd = BigIntRand {};
+        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
         let message = BigInt::from(msg_params.0);
-        let c = ElGamal::encrypt(&message, &keypair.pk).unwrap();
+        let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
         let constant = BigInt::from(msg_params.1);
         let c_tag = ElGamal::pow(&c, &constant);
         let _message_tag = ElGamal::decrypt(&c_tag, &keypair.sk).unwrap();
@@ -66,9 +69,10 @@ mod elgamal_benches {
 
     fn elgamal_encrypt_decrypt_rfc7919(group_id: SupportedGroups) {
         let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let keypair = ElGamalKeyPair::generate(&pp);
+        let rnd = BigIntRand {};
+        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
         let message = BigInt::from(13);
-        let c = ElGamal::encrypt(&message, &keypair.pk).unwrap();
+        let c = ElGamal::encrypt(&message, &keypair.pk, &rnd).unwrap();
         let _message_tag = ElGamal::decrypt(&c, &keypair.sk).unwrap();
     }
 

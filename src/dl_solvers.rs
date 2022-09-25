@@ -77,7 +77,7 @@ impl<'a> SimplePollard<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{rfc7919_groups::SupportedGroups, ElGamalKeyPair, ElGamalPP, ExponentElGamal};
+    use crate::{rfc7919_groups::SupportedGroups, ElGamalKeyPair, ElGamalPP, ExponentElGamal, BigIntRand};
     use curv::arithmetic::traits::Samplable;
 
     #[test]
@@ -123,7 +123,8 @@ mod tests {
     fn test_exponent_elgamal_homomorphic_add_with_decryption() {
         let group_id = SupportedGroups::FFDHE2048;
         let pp = ElGamalPP::generate_from_rfc7919(group_id);
-        let keypair = ElGamalKeyPair::generate(&pp);
+        let rnd = BigIntRand {};
+        let keypair = ElGamalKeyPair::generate(&pp, &rnd);
         let message1 = BigInt::from(1_000);
         let random1 = BigInt::sample_below(&pp.q);
         let c1 =
